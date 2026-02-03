@@ -1,0 +1,22 @@
+# Dipendenze per Classificatore Ticket AI
+
+# LangChain Core - Versione 1.0+
+langchain>=1.0.0
+langchain-core>=1.0.0
+langchain-community>=0.3.0
+
+# LangChain Ollama - API per Ollama
+langchain-ollama>=0.1.0
+
+# Database SQL Server
+pyodbc>=5.0.0
+
+# Gestione variabili ambiente
+python-dotenv>=1.0.0
+
+# Note:
+# - Ollama deve essere installato separatamente o via Docker
+# - Per SQL Server, assicurarsi di avere il driver ODBC installato:
+#   - Windows: ODBC Driver 17 for SQL Server (o versione successiva)
+#   - Linux: Installare Microsoft ODBC Driver for SQL Server
+#   - macOS: Installare Microsoft ODBC Driver for SQL Server

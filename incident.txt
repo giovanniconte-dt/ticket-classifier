@@ -1,0 +1,546 @@
+# PROMPT PER CLASSIFICATORE - CATEGORIA "INCIDENT"
+
+
+## Obiettivo
+
+Classificare le richieste di supporto che rappresentano un **Incident** (malfunzionamento, interruzione o degrado di servizio) piuttosto che una **Request** (richiesta pianificata di servizio).
+
+ 
+
+## Definizione
+
+Un **Incident** è un evento non pianificato che causa o può causare un'interruzione o una riduzione della qualità di un servizio IT, impedendo o limitando le normali attività operative.
+
+ 
+
+---
+
+ 
+
+## CRITERI DI CLASSIFICAZIONE
+
+ 
+
+### 1. INTERRUZIONE NON PIANIFICATA DI SERVIZIO
+
+ 
+
+#### 1.1 Servizio Completamente Non Disponibile
+
+**Pattern identificativi:**
+
+- "Impossibile accedere a [sistema]"
+
+- "Il servizio non risponde"
+
+- "Impossibile raggiungere [applicazione]"
+
+- "Sistema non disponibile" / "down"
+
+- "Pagina bianca" / "errore di caricamento"
+
+- "Timeout" / "connessione scaduta"
+
+- "Il sistema si blocca al login"
+
+ 
+
+**Indicatori tecnici:**
+
+- Errori HTTP: 500, 502, 503, 504
+
+- "Connection refused" / "Connection timeout"
+
+- "Service unavailable"
+
+- "Server not responding"
+
+- "Application error"
+
+ 
+
+**Verbi chiave del problema:**
+
+- NON risponde, NON si carica, NON è raggiungibile
+
+- Si blocca, va in crash, si interrompe
+
+- Rimane bloccato, non procede, non avanza
+
+ 
+
+**Esempi dal contesto SCORE:**
+
+✅ "L'utente segnala l'impossibilità di raggiungere score in quanto dopo aver inserito le credenziali il sistema si blocca, il problema è generale"
+
+✅ "Impossibile raggiungere il sito"
+
+✅ "L'utente segnala l'impossibilità di raggiungere home page di score"
+
+✅ "Impossibile raggiungere score" (cell 71518)
+
+ 
+
+**Livello impatto:** CRITICO (se generalizzato) / ALTO (se singolo utente)
+
+ 
+
+#### 1.2 Funzionalità Specifica Non Disponibile
+
+**Pattern identificativi:**
+
+- "Impossibile [azione specifica]"
+
+- "Non permette di [operazione]"
+
+- "Bloccato durante [fase]"
+
+- "Non consente di [procedere]"
+
+- "La funzione [X] non è disponibile"
+
+ 
+
+**Esempi dal contesto SCORE:**
+
+✅ "L'utente segnala l'impossibilità di salvare una trasformazione d'impegno"
+
+✅ "Impossibile inserire un decreto di liquidazione"
+
+✅ "Non riesce a salvare un variazione a zero"
+
+✅ "Impossibile formalizzare accertamento causa stato del decreto"
+
+✅ "Impossibilità di regolarizzare sospesi in entrata e associare ad un accertamento"
+
+✅ "Impossibilità di ricercare le reversali"
+
+ 
+
+**Livello impatto:** ALTO (funzionalità critica) / MEDIO (funzionalità secondaria)
+
+ 
+
+---
+
+ 
+
+### 2. ERRORI DI SISTEMA E CODICI ERRORE
+
+ 
+
+#### 2.1 Codici Errore Applicativi
+
+**Pattern identificativi:**
+
+- Qualsiasi codice nel formato: `[numero]-[codice alfanumerico]`
+
+- "Errore [codice]" / "Exception [codice]"
+
+- "Si è verificato un errore" + codice
+
+- "Errore durante il tentativo di [azione]"
+
+ 
+
+**Esempi di codici errore da SCORE:**
+
+- `1203-14br`, `1203-pve2`, `1203-tdN9`, `1203-9by`
+
+- `1201-3XDK`
+
+- `121-h6c7`
+
+- `1231262` (violation of PRIMARY KEY)
+
+ 
+
+**Messaggi standard di errore:**
+
+- "Si è verificato il seguente errore durante il tentativo di salvataggio"
+
+- "Si è verificato un eccezione"
+
+- "Violation of PRIMARY KEY constraint"
+
+- "Cannot insert duplicate key"
+
+- "The statement has been terminated"
+
+ 
+
+**Esempi:**
+
+✅ "Trasformazione impegno visualizza errore 1203-14br"
+
+✅ "Compare errore 1203-pve2 durante salvataggio"
+
+✅ "Messaggio errore 1201-3XDK inserendo impegno"
+
+✅ "Si è verificato errore su salvataggio eccezione 121-h6c7"
+
+ 
+
+**Livello impatto:** ALTO (blocca operazione critica) / MEDIO (workaround possibile)
+
+ 
+
+#### 2.2 Errori di Database/Backend
+
+**Pattern identificativi:**
+
+- "Violation of PRIMARY KEY constraint"
+
+- "Cannot insert duplicate key"
+
+- "Foreign key constraint"
+
+- "Deadlock detected"
+
+- "Transaction timeout"
+
+- "Database connection failed"
+
+- "SQL error" / "Query failed"
+
+ 
+
+**Esempi:**
+
+✅ "Violation of PRIMARY KEY constraint 'pk_scoret_variazioni'. Cannot insert duplicate key in object 'dbo.SCORET_VARIAZIONI_SCHEDE_IMPEGNI'"
+
+✅ "The duplicate key value is (1231262, 1, 2025). The statement has been terminated"
+
+ 
+
+**Livello impatto:** CRITICO (integrità dati a rischio) / ALTO (operazione bloccata)
+
+ 
+
+#### 2.3 Errori di Interfaccia/Frontend
+
+**Pattern identificativi:**
+
+- "DataTables warning"
+
+- "Unexpected end of JSON input"
+
+- "Object object" (messaggio generico JS)
+
+- "The given key was not present in the dictionary"
+
+- Campi vuoti quando dovrebbero contenere dati
+
+- Visualizzazione errata di informazioni
+
+ 
+
+**Esempi:**
+
+✅ "DataTables warning Table id tabella reversali si è verificato un errore interno durante la ricerca"
+
+✅ "Compare messaggio di errore 'unexpected end of json input'"
+
+✅ "Errore: The given key was not present in the dictionary"
+
+✅ "Errore: Object object"
+
+✅ "Dopo che spunta l'errore si visualizza il mandato senza dati, tutti i campi sono vuoti"
+
+ 
+
+**Livello impatto:** MEDIO (visualizzazione) / ALTO (se impedisce operazioni)
+
+ 
+
+---
+
+ 
+
+### 3. DEGRADO DELLE PRESTAZIONI
+
+ 
+
+#### 3.1 Lentezza Anomala
+
+**Pattern identificativi:**
+
+- "Il sistema è lento" / "lentissimo"
+
+- "Risponde dopo molto tempo"
+
+- "Impiega [X minuti]" (tempi anomali)
+
+- "Non finisce di caricare"
+
+- "Ricerca infinita" / "elaborazione infinita"
+
+ 
+
+**Indicatori quantitativi:**
+
+- "> 15 minuti" senza risposta
+
+- "> 5 minuti" per operazione normalmente rapida
+
+- "Continua a cercare senza risultati"
+
+ 
+
+**Esempi:**
+
+✅ "Si attiva la ricerca ma dopo più di 15 minuti non visualizza nulla e non smette di cercare"
+
+✅ "Impossibilità di estrazione dei dati sui sospesi di entrata 2025 - continua a caricare senza risultati"
+
+ 
+
+**Livello impatto:** ALTO (se blocca operatività) / MEDIO (se rallenta)
+
+ 
+
+#### 3.2 Timeout e Scadenze
+
+**Pattern identificativi:**
+
+- "Timeout"
+
+- "Connessione scaduta"
+
+- "Sessione scaduta" (durante operazione)
+
+- "Request timeout"
+
+- "Gateway timeout"
+
+ 
+
+**Livello impatto:** ALTO
+
+ 
+
+---
+
+ 
+
+### 4. MALFUNZIONAMENTI RISPETTO AL COMPORTAMENTO ATTESO
+
+ 
+
+#### 4.1 Dati Errati o Inconsistenti
+
+**Pattern identificativi:**
+
+- "I dati non corrispondono"
+
+- "Differenza tra [A] e [B]"
+
+- "Importo errato" / "valore sbagliato"
+
+- "Discrepanza" / "scostamento"
+
+- "Risulta [X] invece di [Y]"
+
+- "Duplicazione non prevista"
+
+ 
+
+**Esempi:**
+
+✅ "Rilevata una differenza tra l'importo complessivo dei mandati emessi e le somme regolarizzate sui sospesi"
+
+✅ "Riferisce una discrepancy per un accertamento giuridico: risulta un riscosso di 65.52 e un versato 65.50"
+
+✅ "Decreto 154 del 2026 ma risulta del 2025 sul bollettino del PagoPA"
+
+✅ "Bollettino di pagamento con 11508 euro errato"
+
+✅ "Enormi differenze nel campo Importo_Iniziale nelle estrazioni Excel"
+
+ 
+
+**Livello impatto:** CRITICO (dati finanziari) / ALTO (dati operativi) / MEDIO (dati informativi)
+
+ 
+
+#### 4.2 Stato del Workflow Incoerente
+
+**Pattern identificativi:**
+
+- "Lo stato del decreto non consente [operazione]"
+
+- "Risulta in stato [X] ma dovrebbe essere [Y]"
+
+- "Decreto risulta [stato] su WF ma [altro stato] nel sistema"
+
+- "Stato incoerente"
+
+- "Bloccato in stato [X]"
+
+ 
+
+**Esempi:**
+
+✅ "Lo stato del decreto non consente di effettuare la formalizzazione"
+
+✅ "Impossibile formalizzare accertamento causa stato del decreto ovvero lavorazione amministrazione"
+
+✅ "Decreto in Lavorazione Amministrazione ma impossibile procedere con formalizzazione"
+
+✅ "Il sistema non ha generato il pagamento della quota IVA" (split payment non eseguito)
+
+ 
+
+**Livello impatto:** ALTO (blocca workflow critico) / MEDIO (workaround possibile)
+
+ 
+
+#### 4.3 Funzionalità Non Opera Come Previsto
+
+**Pattern identificativi:**
+
+- "Dovrebbe [comportamento atteso] ma [comportamento reale]"
+
+- "Non funziona come previsto"
+
+- "Comportamento anomalo"
+
+- "Salva valore diverso da quello inserito"
+
+- "Non visualizza [dati che dovrebbero esserci]"
+
+ 
+
+**Esempi:**
+
+✅ "Ho modificato l'importo ma il sistema ha salvato un valore diverso"
+
+✅ "Facendo l'estrapolazione del file excel non visualizza più la descrizione"
+
+✅ "Inserendo anno d'esercizio 2026 e il capitolo 1991 non compare alcun dato"
+
+✅ "Cercando per il 2026 visualizza 'nessun risultato trovato' - fa vedere solo il capitolo 2861"
+
+✅ "Il capitolo digitato non presenta alcun impegno" (ma l'impegno è correttamente associato)
+
+ 
+
+**Livello impatto:** ALTO (dati critici) / MEDIO (dati secondari)
+
+ 
+
+---
+
+ 
+
+### 5. PROBLEMI DI INTEGRAZIONE E DIPENDENZE
+
+ 
+
+#### 5.1 Problemi con Sistemi Esterni
+
+**Pattern identificativi:**
+
+- "Errore integrazione con [sistema esterno]"
+
+- "PagoPA non risponde"
+
+- "Firma digitale non funziona"
+
+- "Workflow non aggiorna stato"
+
+- "Gestione Documentale non accessibile"
+
+ 
+
+**Esempi:**
+
+✅ "Errore nell'invio del decreto alla valutazione della ragioneria"
+
+✅ "Impossibile inviare alla ragioneria un mandato simultaneo senza il rispettivo mandato"
+
+✅ "Sistema non ha generato il secondo mandato con IVA (split payment)"
+
+✅ "Decreto su WF è in Lavorazione Amministrazione ma non risulta nel sistema"
+
+ 
+
+**Livello impatto:** CRITICO (se blocca processo end-to-end) / ALTO (se rallenta)
+
+ 
+
+#### 5.2 Problemi di Sincronizzazione
+
+**Pattern identificativi:**
+
+- "Dati non aggiornati"
+
+- "Non sincronizzato con [sistema]"
+
+- "Ritardo nell'aggiornamento"
+
+- "Stato non allineato tra [A] e [B]"
+
+ 
+
+**Livello impatto:** ALTO (se causa inconsistenze operative)
+
+ 
+
+---
+
+ 
+
+### 6. PROBLEMI GENERALIZZATI VS. SINGOLO UTENTE
+
+ 
+
+#### 6.1 Problema Generalizzato (Maggiore Impatto)
+
+**Pattern identificativi:**
+
+- "Il problema è generale"
+
+- "Tutto l'ufficio" / "tutto il servizio"
+
+- "Nessuno riesce"
+
+- "Tutti i colleghi hanno lo stesso problema"
+
+- "I colleghi di stanza riescono" (implica problema isolato per quell'utente)
+
+ 
+
+**Esempi:**
+
+✅ "L'utente segnala l'impossibilità di raggiungere home page di score, il problema è generale"
+
+✅ "Tutto il servizio non riesce ad accedere alla gestione F24 firmati"
+
+✅ "I colleghi di stanza riescono" (problema specifico utente)
+
+ 
+
+**Livello impatto:** CRITICO (se generalizzato) / ALTO (se team) / MEDIO (singolo utente)
+
+ 
+
+#### 6.2 Problema Specifico Utente
+
+**Pattern identificativi:**
+
+- "Solo io ho il problema"
+
+- "I miei colleghi riescono"
+
+- Problema con credenziali specifiche
+
+- Problema su specifico browser/postazione
+
+ 
+
+**Livello impatto:** MEDIO (non impatta organizzazione ma blocca utente)
+
+ 
+
+---
