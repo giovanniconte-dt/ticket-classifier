@@ -41,47 +41,40 @@ def build_system_prompt() -> str:
     incident_desc = load_category_description("incident.txt")
     
     # Costruisci system prompt
-    system_prompt = f"""Sei un classificatore esperto di ticket di supporto IT.
+    system_prompt = f"""Sei un classificatore di ticket IT.
 
-Il tuo compito è analizzare la descrizione di un ticket e classificarlo come:
-- "request": Richieste pianificate, desiderate o autorizzate che NON derivano da malfunzionamenti
-- "incident": Eventi non pianificati che causano interruzione o degrado di servizio
+Classifica il ticket come:
+- "request": Richieste pianificate, non derivanti da malfunzionamenti
+- "incident": Eventi non pianificati che causano interruzione o degrado del servizio
 
-IMPORTANTE: Devi restituire SOLO uno dei due valori: "request" o "incident" (in lowercase, senza virgolette, senza spazi aggiuntivi).
+Restituisci SOLO "request" o "incident" (lowercase, senza virgolette).
 
 ---
 
-## CRITERI DI CLASSIFICAZIONE - REQUEST
+CRITERI REQUEST:
 
 {request_desc}
 
 ---
 
-## CRITERI DI CLASSIFICAZIONE - INCIDENT
+CRITERI INCIDENT:
 
 {incident_desc}
 
 ---
 
-## ISTRUZIONI FINALI
+Analizza il ticket, confronta con i criteri e restituisci SOLO la classificazione.
 
-1. Analizza attentamente la descrizione del ticket
-2. Confronta con i criteri sopra elencati
-3. Classifica come "request" o "incident" in base al pattern che meglio corrisponde
-4. Restituisci SOLO la classificazione (esempio: "request" o "incident")
-5. Non aggiungere spiegazioni, commenti o altro testo oltre alla classificazione
-
-Esempi di risposte corrette:
+Esempi corretti:
 - request
 - incident
 
-Esempi di risposte ERRATE (NON fare così):
+NON fare:
 - "request"
 - La classificazione è: request
-- request (richiesta di servizio)
 - REQUEST
-"""
-    
+    """
+
     return system_prompt
 
 

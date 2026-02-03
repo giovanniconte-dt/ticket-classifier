@@ -1,390 +1,83 @@
-# PROMPT PER CLASSIFICATORE - CATEGORIA "REQUEST"
-
-
-## Obiettivo
-
-Classificare le richieste di supporto che rappresentano una **Request** (richiesta di servizio) piuttosto che un **Incident** (malfunzionamento).
-
- 
-
-## Definizione
-
-Una **Request** è una richiesta pianificata, desiderata o autorizzata che NON deriva da un malfunzionamento del sistema, ma da un'esigenza operativa, informativa o di miglioramento.
-
- 
-
----
-
- 
-
-## CRITERI DI CLASSIFICAZIONE
-
- 
-
-### 1. RICHIESTE DI ACCESSO E ABILITAZIONE
-
- 
-
-#### 1.1 Creazione/Modifica Utenze
-
-**Pattern identificativi:**
-
-- "Richiesta creazione utenza" / "nuovo utente"
-
-- "Attivazione account" / "abilitazione account"
-
-- "Modifica permessi" / "cambio ruolo"
-
-- "Disabilitazione utente" / "rimozione accesso"
-
-- "Reset password" (se richiesto dall'utente, non per blocco)
-
-- "Abilitazione secondo fattore di autenticazione"
-
- 
-
-**Verbi chiave:**
-
-- Creare, attivare, abilitare, autorizzare, aggiungere
-
-- Modificare permessi, estendere accesso, concedere
-
-- Disabilitare (su richiesta), rimuovere (pianificato)
-
- 
-
-**Esempi:**
-
-✅ "Richiesta creazione utenza per nuovo dipendente Mario Rossi"
-
-✅ "Attivare accesso a SCORE per utente esistente"
-
-✅ "Modificare profilo da operatore a supervisore"
-
-✅ "Disabilitazione utenze per personale trasferito"
-
-✅ "Estendere permessi lettura su capitoli Dipartimento X"
-
- 
-
-#### 1.2 Accesso a Servizi/Applicazioni
-
-**Pattern identificativi:**
-
-- "Richiesta accesso a [applicazione]"
-
-- "Abilitazione servizio [nome servizio]"
-
-- "Attivazione modulo" / "attivazione funzionalità"
-
-- "Concessione licenza" / "assegnazione licenza"
-
-- "Integrazione con [sistema esterno]"
-
- 
-
-**Esempi:**
-
-✅ "Attivare modulo Gestione Crediti per il dipartimento"
-
-✅ "Richiedere accesso VPN per lavoro da remoto"
-
-✅ "Abilitare funzionalità firma digitale massiva"
-
-✅ "Attivazione casella PEC per nuovo ufficio"
-
- 
-
----
-
- 
-
-### 2. RICHIESTE DI INFORMAZIONE E SUPPORTO
-
- 
-
-#### 2.1 Richieste Informative
-
-**Pattern identificativi:**
-
-- "Richiesta informazioni su..." / "chiarimenti su..."
-
-- "Come posso..." / "è possibile..."
-
-- "Vorrei sapere..." / "necessito di sapere..."
-
-- "Delucidazioni in merito a..." / "spiegazioni su..."
-
-- "Conferma procedura" / "validazione operazione"
-
-- "Richiesta documentazione" / "richiesta manuale"
-
- 
-
-**Verbi chiave:**
-
-- Chiedere, domandare, informarsi, verificare
-
-- Sapere, capire, conoscere, approfondire
-
-- Confermare, validare, chiarire
-
- 
-
-**Esempi:**
-
-✅ "Come posso visualizzare l'elenco dei mandati firmati del 2025?"
-
-✅ "Richiesta procedura corretta per formalizzazione decreti pluriennali"
-
-✅ "Vorrei sapere se è possibile annullare una reversale già emessa"
-
-✅ "Chiarimenti sulla compilazione del campo 'causale' nei DLQ"
-
-✅ "Richiesta documentazione tecnica API SCORE"
-
- 
-
-#### 2.2 Supporto Operativo (Non Malfunzionamento)
-
-**Pattern identificativi:**
-
-- "Supporto per..." / "assistenza per..."
-
-- "Aiuto nell'esecuzione di..." / "guida per..."
-
-- "Affiancamento operativo" / "formazione on-the-job"
-
-- "Verifica correttezza dati inseriti"
-
-- "Validazione procedura eseguita"
-
- 
-
-**Nota critica:** Distinguere da Incident
-
-- ❌ "Il sistema non mi permette di..." → **Incident**
-
-- ✅ "Non so come..." / "Vorrei essere guidato..." → **Request**
-
- 
-
-**Esempi:**
-
-✅ "Assistenza per compilazione primo decreto di accertamento"
-
-✅ "Supporto nell'interpretazione messaggio di validazione"
-
-✅ "Affiancamento per operazione complessa mai eseguita prima"
-
-✅ "Verifica se ho inserito correttamente i dati del beneficiario"
-
- 
-
----
-
- 
-
-### 3. MODIFICHE STANDARD E PRE-APPROVATE
-
- 
-
-#### 3.1 Modifiche Dati Standard
-
-**Pattern identificativi:**
-
-- "Modifica anagrafica" / "aggiornamento dati"
-
-- "Correzione dati inseriti" (se ammessa dalla procedura)
-
-- "Rettifica informazioni" (entro termini consentiti)
-
-- "Aggiornamento recapiti" / "cambio telefono/email"
-
-- "Modifica configurazione standard"
-
- 
-
-**Criteri di distinzione:**
-
-- È una **Request** se: la modifica è prevista, l'utente ha i permessi, la procedura è standard
-
-- È un **Incident** se: la modifica è bloccata da errore, i dati sono corrotti, il sistema non risponde
-
- 
-
-**Esempi:**
-
-✅ "Modifica indirizzo email utente per cambio sede"
-
-✅ "Aggiornamento numero di telefono in anagrafica fornitore"
-
-✅ "Rettifica importo impegno entro termine di modifica"
-
-✅ "Cambio centro di costo per progetto migrato"
-
- 
-
-#### 3.2 Operazioni Amministrative Pre-Approvate
-
-**Pattern identificativi:**
-
-- "Annullamento [entità]" (su richiesta motivata, non per errore sistema)
-
-- "Cancellazione [record]" (autorizzata, non emergenziale)
-
-- "Riallineamento dati" (pianificato, non per inconsistenza)
-
-- "Migrazione dati" (programmata)
-
-- "Consolidamento archivi" (schedulato)
-
- 
-
-**Esempi:**
-
-✅ "Richiesta annullamento decreto n. 123 per errore materiale operatore"
-
-✅ "Cancellazione impegni annullati amministrativamente dal 2020"
-
-✅ "Migrazione storico mandati da vecchio a nuovo capitolo"
-
- 
-
----
-
- 
-
-### 4. RICHIESTE DI MIGLIORAMENTO E NUOVE FUNZIONALITÀ
-
- 
-
-#### 4.1 Enhancement (Miglioramenti)
-
-**Pattern identificativi:**
-
-- "Sarebbe utile se..." / "sarebbe possibile implementare..."
-
-- "Richiesta di miglioramento" / "suggerimento"
-
-- "Ottimizzazione di..." / "semplificazione di..."
-
-- "Rendere più efficiente..." / "velocizzare..."
-
-- "Aggiungere campo..." / "inserire funzione..."
-
- 
-
-**Verbi chiave:**
-
-- Migliorare, ottimizzare, semplificare, velocizzare
-
-- Implementare, aggiungere, estendere, potenziare
-
-- Automatizzare, integrare, personalizzare
-
- 
-
-**Esempi:**
-
-✅ "Sarebbe possibile aggiungere un filtro per capitoli preferiti?"
-
-✅ "Richiesta di implementare esportazione massiva in formato CSV"
-
-✅ "Suggerimento: automatizzare l'invio notifiche per decreti in scadenza"
-
-✅ "Ottimizzazione query Inquiry per ridurre tempi di attesa"
-
- 
-
-#### 4.2 Nuove Funzionalità
-
-**Pattern identificativi:**
-
-- "Richiesta nuova funzionalità" / "feature request"
-
-- "Sviluppo di..." / "creazione di..."
-
-- "Implementazione modulo" / "nuovo servizio"
-
-- "Integrazione con [nuovo sistema]"
-
-- "Dashboard personalizzata" / "report custom"
-
- 
-
-**Esempi:**
-
-✅ "Richiesta sviluppo dashboard per monitoraggio budget dipartimentale"
-
-✅ "Implementazione integrazione SCORE con sistema protocollo"
-
-✅ "Creazione report trimestrale automatico per Ragioneria"
-
-✅ "Nuovo modulo per gestione contributi europei"
-
- 
-
----
-
- 
-
-### 5. AZIONI PIANIFICATE (NON EMERGENZIALI)
-
- 
-
-#### 5.1 Manutenzioni Programmate
-
-**Pattern identificativi:**
-
-- "Richiesta manutenzione" / "manutenzione preventiva"
-
-- "Schedulazione intervento" / "pianificazione aggiornamento"
-
-- "Backup programmato" / "archiviazione dati"
-
-- "Pulizia database" / "ottimizzazione indici"
-
-- "Aggiornamento versione" (concordato)
-
- 
-
-**Esempi:**
-
-✅ "Pianificazione manutenzione database per fine mese"
-
-✅ "Richiesta backup completo prima di upgrade"
-
-✅ "Schedulare pulizia log applicativi del 2023"
-
- 
-
-#### 5.2 Operazioni Massive Pianificate
-
-**Pattern identificativi:**
-
-- "Elaborazione massiva" / "caricamento bulk"
-
-- "Import/export pianificato"
-
-- "Bonifica dati" (programmata, non per errore)
-
-- "Ricalcolo batch" (schedulato)
-
-- "Generazione massiva documenti"
-
- 
-
-**Esempi:**
-
-✅ "Caricamento massivo 500 impegni da file Excel"
-
-✅ "Generazione mandati batch per cedolini mensili"
-
-✅ "Export completo reversali 2025 per controllo esterno"
-
-✅ "Ricalcolo perequazioni per tutti i capitoli (operazione annuale)"
-
- 
-
----
+Una Request è una richiesta pianificata che NON deriva da malfunzionamento, ma da esigenza operativa, informativa o di miglioramento.
+
+CRITERI DI CLASSIFICAZIONE:
+
+1. ACCESSO E ABILITAZIONE
+
+Creazione/Modifica Utenze:
+- Richiesta creazione utenza, nuovo utente
+- Attivazione/abilitazione account
+- Modifica permessi, cambio ruolo
+- Disabilitazione utente, rimozione accesso
+- Reset password (richiesto dall'utente)
+
+Accesso Servizi/Applicazioni:
+- Richiesta accesso a [applicazione]
+- Abilitazione servizio, attivazione modulo
+- Concessione licenza
+- Integrazione con [sistema esterno]
+
+2. INFORMAZIONE E SUPPORTO
+
+Richieste Informative:
+- Richiesta informazioni, chiarimenti
+- Come posso..., è possibile...
+- Vorrei sapere..., delucidazioni
+- Conferma procedura, validazione operazione
+- Richiesta documentazione/manuale
+
+Supporto Operativo (NON malfunzionamento):
+- Supporto/assistenza per...
+- Aiuto nell'esecuzione, guida
+- Affiancamento operativo, formazione
+- Verifica correttezza dati inseriti
+
+DISTINZIONE CRITICA:
+- "Il sistema non mi permette di..." = INCIDENT
+- "Non so come..." / "Vorrei essere guidato..." = REQUEST
+
+3. MODIFICHE STANDARD
+
+Modifiche Dati:
+- Modifica anagrafica, aggiornamento dati
+- Correzione dati inseriti (se ammessa)
+- Rettifica informazioni (entro termini)
+- Aggiornamento recapiti
+- Modifica configurazione standard
+
+Operazioni Pre-Approvate:
+- Annullamento [entità] (su richiesta motivata)
+- Cancellazione [record] (autorizzata)
+- Riallineamento dati (pianificato)
+- Migrazione dati (programmata)
+
+4. MIGLIORAMENTO E NUOVE FUNZIONALITÀ
+
+Enhancement:
+- Sarebbe utile se..., sarebbe possibile implementare...
+- Richiesta di miglioramento, suggerimento
+- Ottimizzazione, semplificazione
+- Rendere più efficiente, velocizzare
+- Aggiungere campo, inserire funzione
+
+Nuove Funzionalità:
+- Feature request
+- Sviluppo/creazione di...
+- Implementazione modulo, nuovo servizio
+- Dashboard personalizzata, report custom
+
+5. AZIONI PIANIFICATE
+
+Manutenzioni Programmate:
+- Richiesta manutenzione preventiva
+- Schedulazione intervento
+- Backup programmato, archiviazione dati
+- Pulizia database, ottimizzazione indici
+- Aggiornamento versione (concordato)
+
+Operazioni Massive:
+- Elaborazione massiva, caricamento bulk
+- Import/export pianificato
+- Bonifica dati (programmata)
+- Ricalcolo batch (schedulato)
+- Generazione massiva documenti
