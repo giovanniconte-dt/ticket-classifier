@@ -6,7 +6,7 @@ Tutti i tools usano parametri preparati per prevenire SQL injection.
 
 from langchain_core.tools import tool
 import pyodbc
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from config import get_connection_string
 
 
@@ -36,7 +36,7 @@ def get_unclassified_tickets(limit: int = 100) -> str:
         
         # Query con parametri preparati (SICURO)
         query = """
-            SELECT Id, Numero, Descrizione 
+            SELECT Id, Numero, Soggetto, Descrizione 
             FROM ticket 
             WHERE Classificazione_AI IS NULL
             ORDER BY Id
@@ -58,10 +58,13 @@ def get_unclassified_tickets(limit: int = 100) -> str:
         # Formatta risultati
         result = f"Trovati {len(tickets)} ticket non classificati:\n\n"
         for ticket in tickets:
-            ticket_id, numero, descrizione = ticket
+            ticket_id, numero, soggetto, descrizione = ticket
+            soggetto = soggetto or ""
             # Tronca descrizione se troppo lunga
             desc_short = descrizione[:100] + "..." if len(descrizione) > 100 else descrizione
             result += f"ID: {ticket_id} | Numero: {numero}\n"
+            if soggetto:
+                result += f"Soggetto: {soggetto}\n"
             result += f"Descrizione: {desc_short}\n\n"
         
         return result
@@ -71,16 +74,21 @@ def get_unclassified_tickets(limit: int = 100) -> str:
 
 
 @tool
-def update_ticket_classification(ticket_id: int, classification: str) -> str:
+def update_ticket_classification(
+    ticket_id: int,
+    classification: str,
+    motivazione: Optional[str] = None,
+) -> str:
     """
     Aggiorna la classificazione AI di un ticket specifico.
     
-    Questo tool aggiorna il campo Classificazione_AI nel database per un ticket specifico.
+    Questo tool aggiorna i campi Classificazione_AI e Motivazione_AI nel database per un ticket specifico.
     La classificazione deve essere "request" o "incident" (case-insensitive).
     
     Args:
         ticket_id: ID del ticket da aggiornare (chiave primaria)
         classification: Classificazione da assegnare ("request" o "incident")
+        motivazione: Motivazione breve opzionale della classificazione
     
     Returns:
         Messaggio di conferma o errore
@@ -101,16 +109,19 @@ def update_ticket_classification(ticket_id: int, classification: str) -> str:
             conn.close()
             return f"Errore: Ticket con ID {ticket_id} non trovato nel database."
         
-        # Aggiorna classificazione con parametri preparati (SICURO)
-        update_query = "UPDATE ticket SET Classificazione_AI = ? WHERE Id = ?"
-        cursor.execute(update_query, (classification_lower, ticket_id))
+        # Aggiorna classificazione e motivazione con parametri preparati (SICURO)
+        update_query = "UPDATE ticket SET Classificazione_AI = ?, Motivazione_AI = ? WHERE Id = ?"
+        cursor.execute(update_query, (classification_lower, motivazione, ticket_id))
         conn.commit()
         
         rows_affected = cursor.rowcount
         conn.close()
         
         if rows_affected > 0:
-            return f"✅ Ticket ID {ticket_id} classificato come '{classification_lower}' con successo."
+            msg = f"✅ Ticket ID {ticket_id} classificato come '{classification_lower}' con successo."
+            if motivazione:
+                msg += f" Motivazione: {motivazione[:100]}{'...' if len(motivazione) > 100 else ''}"
+            return msg
         else:
             return f"⚠️ Nessuna riga aggiornata per ticket ID {ticket_id}."
     

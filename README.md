@@ -13,6 +13,8 @@ classificatore/
 ├── main.py              # Script principale con logica batch
 ├── config.py            # Configurazione (DB, LLM, system prompt)
 ├── tools.py             # Tools LangChain per database
+├── schema.sql           # Schema tabella ticket (nuovi ambienti)
+├── migrations/          # Script migrazione per DB esistenti
 ├── requirements.txt     # Dipendenze Python
 ├── README.md            # Questa documentazione
 ├── env.example          # Template variabili ambiente (rinominare in .env)
@@ -95,15 +97,20 @@ Il sistema si aspetta una tabella `ticket` con la seguente struttura:
 
 ```sql
 CREATE TABLE ticket (
-    Id                 INT IDENTITY PRIMARY KEY,
+    Id                 INT IDENTITY CONSTRAINT ticket_pk PRIMARY KEY,
     Numero             VARCHAR(MAX) NOT NULL,
     Classificazione    VARCHAR(MAX) NOT NULL,
     Categoria          VARCHAR(MAX) NOT NULL,
     Sottocategoria     VARCHAR(MAX) NOT NULL,
     Descrizione        VARCHAR(MAX) NOT NULL,
-    Classificazione_AI VARCHAR(MAX)  -- request, incident, NULL
+    Esito              VARCHAR(MAX) NULL,
+    Soggetto           VARCHAR(MAX) NOT NULL,
+    Classificazione_AI VARCHAR(MAX) NULL,  -- request, incident, NULL
+    Motivazione_AI     VARCHAR(MAX) NULL   -- motivazione breve dal classificatore
 )
 ```
+
+Per nuovi ambienti usa `schema.sql`. Per chi ha già la tabella, esegui `migrations/001_add_esito_soggetto_motivazione_ai.sql`.
 
 ## Utilizzo
 

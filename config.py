@@ -47,7 +47,13 @@ Classifica il ticket come:
 - "request": Richieste pianificate, non derivanti da malfunzionamenti
 - "incident": Eventi non pianificati che causano interruzione o degrado del servizio
 
-Restituisci SOLO "request" o "incident" (lowercase, senza virgolette).
+Restituisci:
+- Prima riga: SOLO "request" o "incident" (lowercase, senza virgolette).
+- Seconda riga (opzionale): una breve motivazione (una frase).
+
+Esempio di risposta corretta:
+request
+Richiesta di accesso a sistema pianificata
 
 ---
 
@@ -63,11 +69,12 @@ CRITERI INCIDENT:
 
 ---
 
-Analizza il ticket, confronta con i criteri e restituisci SOLO la classificazione.
+Analizza il ticket, confronta con i criteri e restituisci prima la classificazione, poi (opzionale) la motivazione.
 
 Esempi corretti:
-- request
-- incident
+request
+Il ticket riguarda una richiesta di abilitazione utente
+incident
 
 NON fare:
 - "request"

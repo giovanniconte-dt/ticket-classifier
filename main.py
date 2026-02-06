@@ -9,7 +9,7 @@ Esegue:
 
 import sys
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 import pyodbc
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 
@@ -48,7 +48,7 @@ def get_unclassified_tickets_from_db(limit: Optional[int] = None) -> List[Dict[s
         cursor = conn.cursor()
         
         query = """
-            SELECT Id, Numero, Descrizione 
+            SELECT Id, Numero, Soggetto, Descrizione 
             FROM ticket 
             WHERE Classificazione_AI IS NULL
             ORDER BY Id
@@ -65,7 +65,8 @@ def get_unclassified_tickets_from_db(limit: Optional[int] = None) -> List[Dict[s
             tickets.append({
                 "Id": row[0],
                 "Numero": row[1],
-                "Descrizione": row[2]
+                "Soggetto": row[2] or "",
+                "Descrizione": row[3]
             })
         
         conn.close()
@@ -76,16 +77,20 @@ def get_unclassified_tickets_from_db(limit: Optional[int] = None) -> List[Dict[s
         raise
 
 
-def classify_ticket_description(chain, description: str) -> Optional[str]:
+MOTIVAZIONE_MAX_LEN = 500
+
+
+def classify_ticket_description(chain, description: str) -> Tuple[Optional[str], Optional[str]]:
     """
     Classifica una descrizione di ticket usando la chain LangChain.
     
     Args:
         chain: Chain LangChain configurata (prompt | llm)
-        description: Descrizione del ticket da classificare
+        description: Testo del ticket (Soggetto + Descrizione) da classificare
     
     Returns:
-        Classificazione ("request" o "incident") o None in caso di errore
+        Tupla (classificazione, motivazione): classificazione "request"/"incident" o None,
+        motivazione breve o None
     """
     try:
         # Prepara il messaggio per la chain
@@ -94,36 +99,52 @@ def classify_ticket_description(chain, description: str) -> Optional[str]:
         # Invoca la chain
         result = chain.invoke({"input": message})
         
-        # Estrai la risposta
-        response = result.content.strip().lower()
+        # Estrai la risposta e splitta per righe
+        response = result.content.strip()
+        lines = [ln.strip() for ln in response.split("\n") if ln.strip()]
         
-        # Normalizza e valida la risposta
-        response_clean = response.replace('"', '').replace("'", "").strip()
+        if not lines:
+            logger.warning("Risposta Agent vuota")
+            return (None, None)
         
-        if response_clean in ["request", "incident"]:
-            return response_clean
+        # Prima riga: classificazione
+        first_line = lines[0].replace('"', '').replace("'", "").lower().strip()
+        if first_line in ["request", "incident"]:
+            classificazione = first_line
+        elif "request" in first_line:
+            classificazione = "request"
+        elif "incident" in first_line:
+            classificazione = "incident"
         else:
-            # Prova a estrarre la classificazione dalla risposta
-            if "request" in response_clean:
-                return "request"
-            elif "incident" in response_clean:
-                return "incident"
-            else:
-                logger.warning(f"Risposta Agent non valida: '{response}'")
-                return None
+            logger.warning(f"Risposta Agent non valida: '{response}'")
+            return (None, None)
+        
+        # Seconda riga (opzionale): motivazione
+        motivazione = None
+        if len(lines) >= 2:
+            motivazione = lines[1].strip()
+            if len(motivazione) > MOTIVAZIONE_MAX_LEN:
+                motivazione = motivazione[:MOTIVAZIONE_MAX_LEN]
+        
+        return (classificazione, motivazione or None)
     
     except Exception as e:
         logger.error(f"Errore nella classificazione: {e}")
-        return None
+        return (None, None)
 
 
-def update_ticket_in_db(ticket_id: int, classification: str) -> bool:
+def update_ticket_in_db(
+    ticket_id: int,
+    classification: str,
+    motivazione: Optional[str] = None,
+) -> bool:
     """
     Aggiorna la classificazione di un ticket nel database.
     
     Args:
         ticket_id: ID del ticket
         classification: Classificazione ("request" o "incident")
+        motivazione: Motivazione breve (opzionale)
     
     Returns:
         True se aggiornato con successo, False altrimenti
@@ -140,8 +161,8 @@ def update_ticket_in_db(ticket_id: int, classification: str) -> bool:
             return False
         
         # Aggiorna con parametri preparati
-        update_query = "UPDATE ticket SET Classificazione_AI = ? WHERE Id = ?"
-        cursor.execute(update_query, (classification_lower, ticket_id))
+        update_query = "UPDATE ticket SET Classificazione_AI = ?, Motivazione_AI = ? WHERE Id = ?"
+        cursor.execute(update_query, (classification_lower, motivazione, ticket_id))
         conn.commit()
         
         rows_affected = cursor.rowcount
@@ -205,12 +226,16 @@ def main():
         for i, ticket in enumerate(tickets, 1):
             ticket_id = ticket["Id"]
             numero = ticket["Numero"]
+            soggetto = ticket.get("Soggetto", "") or ""
             descrizione = ticket["Descrizione"]
             
             logger.info(f"[{i}/{len(tickets)}] Processando ticket ID {ticket_id} (Numero: {numero})")
             
+            # Costruisci testo per LLM (Soggetto + Descrizione)
+            testo_ticket = f"Soggetto: {soggetto}\n\nDescrizione: {descrizione}" if soggetto else descrizione
+            
             # Classifica
-            classification = classify_ticket_description(chain, descrizione)
+            classification, motivazione = classify_ticket_description(chain, testo_ticket)
             
             if not classification:
                 logger.warning(f"  ⚠️  Impossibile classificare ticket ID {ticket_id}")
@@ -218,9 +243,11 @@ def main():
                 continue
             
             logger.info(f"  📋 Classificazione: {classification}")
+            if motivazione:
+                logger.info(f"  💬 Motivazione: {motivazione}")
             
             # Aggiorna database
-            if update_ticket_in_db(ticket_id, classification):
+            if update_ticket_in_db(ticket_id, classification, motivazione):
                 logger.info(f"  ✅ Ticket ID {ticket_id} aggiornato nel database")
                 stats["classified"] += 1
                 stats[classification] += 1
