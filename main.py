@@ -7,6 +7,8 @@ Esegue:
 3. Aggiorna il database con la classificazione
 """
 
+import json
+import re
 import sys
 import logging
 from typing import List, Dict, Any, Optional, Tuple
@@ -80,6 +82,38 @@ def get_unclassified_tickets_from_db(limit: Optional[int] = None) -> List[Dict[s
 MOTIVAZIONE_MAX_LEN = 500
 
 
+def _extract_json_from_response(response: str) -> Optional[dict]:
+    """Estrae un oggetto JSON dalla risposta (utile se l'LLM aggiunge testo extra)."""
+    response = response.strip()
+    # Prova json.loads diretto
+    try:
+        return json.loads(response)
+    except json.JSONDecodeError:
+        pass
+    # Fallback: estrai da markdown code block (```json ... ```)
+    code_block = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', response, re.DOTALL)
+    if code_block:
+        try:
+            return json.loads(code_block.group(1).strip())
+        except json.JSONDecodeError:
+            pass
+    # Fallback: estrai primo oggetto JSON (da primo { a ultimo })
+    start = response.find('{')
+    if start >= 0:
+        depth = 0
+        for i, c in enumerate(response[start:], start):
+            if c == '{':
+                depth += 1
+            elif c == '}':
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(response[start : i + 1])
+                    except json.JSONDecodeError:
+                        break
+    return None
+
+
 def classify_ticket_description(chain, description: str) -> Tuple[Optional[str], Optional[str]]:
     """
     Classifica una descrizione di ticket usando la chain LangChain.
@@ -99,34 +133,35 @@ def classify_ticket_description(chain, description: str) -> Tuple[Optional[str],
         # Invoca la chain
         result = chain.invoke({"input": message})
         
-        # Estrai la risposta e splitta per righe
         response = result.content.strip()
-        lines = [ln.strip() for ln in response.split("\n") if ln.strip()]
-        
-        if not lines:
+        if not response:
             logger.warning("Risposta Agent vuota")
             return (None, None)
         
-        # Prima riga: classificazione
-        first_line = lines[0].replace('"', '').replace("'", "").lower().strip()
-        if first_line in ["request", "incident"]:
-            classificazione = first_line
-        elif "request" in first_line:
-            classificazione = "request"
-        elif "incident" in first_line:
-            classificazione = "incident"
-        else:
-            logger.warning(f"Risposta Agent non valida: '{response}'")
+        parsed = _extract_json_from_response(response)
+        if not parsed:
+            logger.warning(f"Risposta Agent non è JSON valido: '{response[:200]}...'")
             return (None, None)
         
-        # Seconda riga (opzionale): motivazione
-        motivazione = None
-        if len(lines) >= 2:
-            motivazione = lines[1].strip()
-            if len(motivazione) > MOTIVAZIONE_MAX_LEN:
-                motivazione = motivazione[:MOTIVAZIONE_MAX_LEN]
+        esito = (parsed.get("esito") or "").strip()
+        if isinstance(esito, str):
+            esito = esito.lower()
+        else:
+            esito = str(esito).lower()
         
-        return (classificazione, motivazione or None)
+        if esito not in ["request", "incident"]:
+            logger.warning(f"Esito non valido nel JSON: '{esito}'")
+            return (None, None)
+        
+        motivazione = parsed.get("motivazione")
+        if motivazione is not None and isinstance(motivazione, str):
+            motivazione = motivazione.strip() or None
+            if motivazione and len(motivazione) > MOTIVAZIONE_MAX_LEN:
+                motivazione = motivazione[:MOTIVAZIONE_MAX_LEN]
+        else:
+            motivazione = None
+        
+        return (esito, motivazione)
     
     except Exception as e:
         logger.error(f"Errore nella classificazione: {e}")

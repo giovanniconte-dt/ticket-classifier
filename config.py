@@ -47,13 +47,11 @@ Classifica il ticket come:
 - "request": Richieste pianificate, non derivanti da malfunzionamenti
 - "incident": Eventi non pianificati che causano interruzione o degrado del servizio
 
-Restituisci:
-- Prima riga: SOLO "request" o "incident" (lowercase, senza virgolette).
-- Seconda riga (opzionale): una breve motivazione (una frase).
+Restituisci SOLO un JSON valido con due chiavi:
+- "esito": "request" o "incident" (lowercase)
+- "motivazione": breve motivazione in una frase (stringa, può essere vuota)
 
-Esempio di risposta corretta:
-request
-Richiesta di accesso a sistema pianificata
+Esempio: {"esito": "request", "motivazione": "Richiesta di accesso pianificata"}
 
 ---
 
@@ -69,17 +67,16 @@ CRITERI INCIDENT:
 
 ---
 
-Analizza il ticket, confronta con i criteri e restituisci prima la classificazione, poi (opzionale) la motivazione.
+Analizza il ticket, confronta con i criteri e restituisci SOLO il JSON.
 
 Esempi corretti:
-request
-Il ticket riguarda una richiesta di abilitazione utente
-incident
+{"esito": "request", "motivazione": "Il ticket riguarda una richiesta di abilitazione utente"}
+{"esito": "incident", "motivazione": "Interruzione non pianificata del servizio"}
 
 NON fare:
-- "request"
-- La classificazione è: request
-- REQUEST
+- Testo prima o dopo il JSON
+- "request" o "incident" senza JSON
+- REQUEST (deve essere lowercase)
     """
 
     return system_prompt
